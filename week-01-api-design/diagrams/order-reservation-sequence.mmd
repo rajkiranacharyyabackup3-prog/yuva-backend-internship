@@ -1,0 +1,18 @@
+sequenceDiagram
+    actor C as Customer
+    participant A as Spring Boot API
+    participant D as PostgreSQL
+    C->>A: POST /orders with items and Idempotency-Key
+    A->>D: Begin transaction; load prices and lock stock rows
+    D-->>A: Current products and available quantities
+    A->>D: Conditionally reserve all requested quantities
+    alt All requested stock is available
+        D-->>A: Reservation succeeds
+        A->>D: Save order and item price snapshots
+        A->>D: Commit transaction
+        D-->>A: Committed order
+        A-->>C: 201 Created with order
+    else Any requested quantity is unavailable
+        A->>D: Roll back transaction
+        A-->>C: 409 Conflict; no partial order
+    end

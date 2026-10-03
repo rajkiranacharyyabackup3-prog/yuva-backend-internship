@@ -1,0 +1,1945 @@
+"openapi": "3.0.3"
+"info":
+  "title": "YuvaIntern Simple E-commerce API"
+  "version": "1.0.0"
+  "description": "Week 1 API design contract. Proposed target: Java with Spring Boot and PostgreSQL. This specification is not an implemented service."
+"servers":
+  -
+    "url": "http://localhost:8080/api/v1"
+    "description": "Local development server"
+"tags":
+  -
+    "name": "Authentication"
+  -
+    "name": "Users"
+  -
+    "name": "Products"
+  -
+    "name": "Orders"
+  -
+    "name": "Inventory"
+"paths":
+  "/auth/login":
+    "post":
+      "tags":
+        - "Authentication"
+      "summary": "Log in"
+      "description": "Verify credentials and issue a short-lived token."
+      "operationId": "authenticationLogIn"
+      "responses":
+        "200":
+          "description": "Successful response."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/AuthToken"
+        "400":
+          "description": "Malformed input or validation failure."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "429":
+          "description": "Rate limit exceeded."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/LoginRequest"
+  "/users":
+    "post":
+      "tags":
+        - "Users"
+      "summary": "Register user"
+      "description": "Public registration creates CUSTOMER only."
+      "operationId": "usersRegisterUser"
+      "responses":
+        "201":
+          "description": "Created."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/User"
+        "400":
+          "description": "Malformed input or validation failure."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "409":
+          "description": "State, stock, or uniqueness conflict."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "422":
+          "description": "Business rule violation."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "429":
+          "description": "Rate limit exceeded."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/RegisterUserRequest"
+    "get":
+      "tags":
+        - "Users"
+      "summary": "List users"
+      "description": "List accounts for administration. Requires ADMIN."
+      "operationId": "usersListUsers"
+      "responses":
+        "200":
+          "description": "Successful response."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/UserPage"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "429":
+          "description": "Rate limit exceeded."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "limit"
+          "in": "query"
+          "required": false
+          "description": "Page size from 1 to 100; default 20."
+          "schema":
+            "type": "integer"
+            "minimum": 1
+            "maximum": 100
+            "default": 20
+        -
+          "name": "cursor"
+          "in": "query"
+          "required": false
+          "description": "Opaque cursor from the previous page."
+          "schema":
+            "type": "string"
+  "/users/{userId}":
+    "get":
+      "tags":
+        - "Users"
+      "summary": "Get user"
+      "description": "Return own profile or a profile to an administrator. Requires a valid bearer token and resource-level authorization."
+      "operationId": "usersGetUser"
+      "responses":
+        "200":
+          "description": "Successful response."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/User"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "404":
+          "description": "Resource missing or not visible."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "userId"
+          "in": "path"
+          "required": true
+          "description": "User UUID."
+          "schema":
+            "type": "string"
+            "format": "uuid"
+    "put":
+      "tags":
+        - "Users"
+      "summary": "Replace user profile"
+      "description": "Replace editable fields; customers cannot change role or status. Requires a valid bearer token and resource-level authorization."
+      "operationId": "usersReplaceUserProfile"
+      "responses":
+        "200":
+          "description": "Successful response."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/User"
+        "400":
+          "description": "Malformed input or validation failure."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "404":
+          "description": "Resource missing or not visible."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "409":
+          "description": "State, stock, or uniqueness conflict."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "422":
+          "description": "Business rule violation."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "userId"
+          "in": "path"
+          "required": true
+          "description": "User UUID."
+          "schema":
+            "type": "string"
+            "format": "uuid"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/UserUpdateRequest"
+    "delete":
+      "tags":
+        - "Users"
+      "summary": "Deactivate user"
+      "description": "Soft-deactivate account and retain order history. Requires a valid bearer token and resource-level authorization."
+      "operationId": "usersDeactivateUser"
+      "responses":
+        "204":
+          "description": "No response body."
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "404":
+          "description": "Resource missing or not visible."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "409":
+          "description": "State, stock, or uniqueness conflict."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "userId"
+          "in": "path"
+          "required": true
+          "description": "User UUID."
+          "schema":
+            "type": "string"
+            "format": "uuid"
+  "/products":
+    "get":
+      "tags":
+        - "Products"
+      "summary": "List products"
+      "description": "Browse active products with filters and cursor pagination."
+      "operationId": "productsListProducts"
+      "responses":
+        "200":
+          "description": "Successful response."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ProductPage"
+        "400":
+          "description": "Malformed input or validation failure."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "429":
+          "description": "Rate limit exceeded."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "parameters":
+        -
+          "name": "limit"
+          "in": "query"
+          "required": false
+          "description": "Page size from 1 to 100; default 20."
+          "schema":
+            "type": "integer"
+            "minimum": 1
+            "maximum": 100
+            "default": 20
+        -
+          "name": "cursor"
+          "in": "query"
+          "required": false
+          "description": "Opaque cursor from the previous page."
+          "schema":
+            "type": "string"
+        -
+          "name": "q"
+          "in": "query"
+          "required": false
+          "description": "Search product name, SKU, or description."
+          "schema":
+            "type": "string"
+            "maxLength": 100
+        -
+          "name": "category"
+          "in": "query"
+          "required": false
+          "description": "Exact category filter."
+          "schema":
+            "type": "string"
+        -
+          "name": "inStock"
+          "in": "query"
+          "required": false
+          "description": "Only products with available inventory."
+          "schema":
+            "type": "boolean"
+    "post":
+      "tags":
+        - "Products"
+      "summary": "Create product"
+      "description": "Create a catalog product; initialize stock separately. Requires ADMIN."
+      "operationId": "productsCreateProduct"
+      "responses":
+        "201":
+          "description": "Created."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Product"
+        "400":
+          "description": "Malformed input or validation failure."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "409":
+          "description": "State, stock, or uniqueness conflict."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "422":
+          "description": "Business rule violation."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/ProductWriteRequest"
+  "/products/{productId}":
+    "get":
+      "tags":
+        - "Products"
+      "summary": "Get product"
+      "description": "Publicly return active product. A valid ADMIN bearer token may also read an archived product; an invalid supplied token returns 401."
+      "operationId": "productsGetProduct"
+      "responses":
+        "200":
+          "description": "Successful response."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Product"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "404":
+          "description": "Resource missing or not visible."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "429":
+          "description": "Rate limit exceeded."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+        - {}
+      "parameters":
+        -
+          "name": "productId"
+          "in": "path"
+          "required": true
+          "description": "Product UUID."
+          "schema":
+            "type": "string"
+            "format": "uuid"
+    "put":
+      "tags":
+        - "Products"
+      "summary": "Replace product"
+      "description": "Replace editable catalog fields. Requires ADMIN."
+      "operationId": "productsReplaceProduct"
+      "responses":
+        "200":
+          "description": "Successful response."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Product"
+        "400":
+          "description": "Malformed input or validation failure."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "404":
+          "description": "Resource missing or not visible."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "409":
+          "description": "State, stock, or uniqueness conflict."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "422":
+          "description": "Business rule violation."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "productId"
+          "in": "path"
+          "required": true
+          "description": "Product UUID."
+          "schema":
+            "type": "string"
+            "format": "uuid"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/ProductWriteRequest"
+    "delete":
+      "tags":
+        - "Products"
+      "summary": "Archive product"
+      "description": "Soft-archive and preserve historical order snapshots. Requires ADMIN."
+      "operationId": "productsArchiveProduct"
+      "responses":
+        "204":
+          "description": "No response body."
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "404":
+          "description": "Resource missing or not visible."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "409":
+          "description": "State, stock, or uniqueness conflict."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "productId"
+          "in": "path"
+          "required": true
+          "description": "Product UUID."
+          "schema":
+            "type": "string"
+            "format": "uuid"
+  "/orders":
+    "get":
+      "tags":
+        - "Orders"
+      "summary": "List orders"
+      "description": "Customers see own orders; administrators may see all. Requires a valid bearer token and resource-level authorization."
+      "operationId": "ordersListOrders"
+      "responses":
+        "200":
+          "description": "Successful response."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/OrderPage"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "429":
+          "description": "Rate limit exceeded."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "limit"
+          "in": "query"
+          "required": false
+          "description": "Page size from 1 to 100; default 20."
+          "schema":
+            "type": "integer"
+            "minimum": 1
+            "maximum": 100
+            "default": 20
+        -
+          "name": "cursor"
+          "in": "query"
+          "required": false
+          "description": "Opaque cursor from the previous page."
+          "schema":
+            "type": "string"
+        -
+          "name": "status"
+          "in": "query"
+          "required": false
+          "description": "Filter by status."
+          "schema":
+            "type": "string"
+            "enum":
+              - "PLACED"
+              - "CANCELLED"
+    "post":
+      "tags":
+        - "Orders"
+      "summary": "Place order"
+      "description": "Calculate prices server-side and reserve stock atomically. Requires a valid bearer token and resource-level authorization."
+      "operationId": "ordersPlaceOrder"
+      "responses":
+        "201":
+          "description": "Created."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Order"
+          "headers":
+            "Location":
+              "description": "URI of the created order resource."
+              "schema":
+                "type": "string"
+                "format": "uri-reference"
+        "400":
+          "description": "Malformed input or validation failure."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "404":
+          "description": "Resource missing or not visible."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "409":
+          "description": "State, stock, or uniqueness conflict."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "422":
+          "description": "Business rule violation."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "429":
+          "description": "Rate limit exceeded."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "Idempotency-Key"
+          "in": "header"
+          "required": true
+          "description": "Reuse the same key when retrying this create request."
+          "schema":
+            "type": "string"
+            "minLength": 16
+            "maxLength": 128
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/OrderCreateRequest"
+  "/orders/{orderId}":
+    "get":
+      "tags":
+        - "Orders"
+      "summary": "Get order"
+      "description": "Return order to its owner or an administrator. Requires a valid bearer token and resource-level authorization."
+      "operationId": "ordersGetOrder"
+      "responses":
+        "200":
+          "description": "Successful response."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Order"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "404":
+          "description": "Resource missing or not visible."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "orderId"
+          "in": "path"
+          "required": true
+          "description": "Order UUID."
+          "schema":
+            "type": "string"
+            "format": "uuid"
+    "put":
+      "tags":
+        - "Orders"
+      "summary": "Replace editable order details"
+      "description": "Change address and note only while PLACED; item prices and quantities are immutable. Requires a valid bearer token and resource-level authorization."
+      "operationId": "ordersReplaceEditableOrderDetails"
+      "responses":
+        "200":
+          "description": "Successful response."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Order"
+        "400":
+          "description": "Malformed input or validation failure."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "404":
+          "description": "Resource missing or not visible."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "409":
+          "description": "State, stock, or uniqueness conflict."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "422":
+          "description": "Business rule violation."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "orderId"
+          "in": "path"
+          "required": true
+          "description": "Order UUID."
+          "schema":
+            "type": "string"
+            "format": "uuid"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/OrderUpdateRequest"
+    "delete":
+      "tags":
+        - "Orders"
+      "summary": "Cancel order"
+      "description": "Cancel PLACED order and release reservation transactionally; retain audit record. Requires a valid bearer token and resource-level authorization."
+      "operationId": "ordersCancelOrder"
+      "responses":
+        "204":
+          "description": "No response body."
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "404":
+          "description": "Resource missing or not visible."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "409":
+          "description": "State, stock, or uniqueness conflict."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "orderId"
+          "in": "path"
+          "required": true
+          "description": "Order UUID."
+          "schema":
+            "type": "string"
+            "format": "uuid"
+  "/inventory":
+    "get":
+      "tags":
+        - "Inventory"
+      "summary": "List inventory"
+      "description": "List stock records for administrators. Requires ADMIN."
+      "operationId": "inventoryListInventory"
+      "responses":
+        "200":
+          "description": "Successful response."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/InventoryPage"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "429":
+          "description": "Rate limit exceeded."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "limit"
+          "in": "query"
+          "required": false
+          "description": "Page size from 1 to 100; default 20."
+          "schema":
+            "type": "integer"
+            "minimum": 1
+            "maximum": 100
+            "default": 20
+        -
+          "name": "cursor"
+          "in": "query"
+          "required": false
+          "description": "Opaque cursor from the previous page."
+          "schema":
+            "type": "string"
+        -
+          "name": "lowStockOnly"
+          "in": "query"
+          "required": false
+          "description": "Only stock below reorder point."
+          "schema":
+            "type": "boolean"
+    "post":
+      "tags":
+        - "Inventory"
+      "summary": "Create inventory record"
+      "description": "Initialize stock tracking for an existing product. Requires ADMIN."
+      "operationId": "inventoryCreateInventoryRecord"
+      "responses":
+        "201":
+          "description": "Created."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Inventory"
+        "400":
+          "description": "Malformed input or validation failure."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "404":
+          "description": "Resource missing or not visible."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "409":
+          "description": "State, stock, or uniqueness conflict."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "422":
+          "description": "Business rule violation."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/InventoryCreateRequest"
+  "/inventory/{productId}":
+    "get":
+      "tags":
+        - "Inventory"
+      "summary": "Get inventory"
+      "description": "Get stock record for a product. Requires ADMIN."
+      "operationId": "inventoryGetInventory"
+      "responses":
+        "200":
+          "description": "Successful response."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Inventory"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "404":
+          "description": "Resource missing or not visible."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "productId"
+          "in": "path"
+          "required": true
+          "description": "Product UUID."
+          "schema":
+            "type": "string"
+            "format": "uuid"
+    "put":
+      "tags":
+        - "Inventory"
+      "summary": "Replace inventory settings"
+      "description": "Replace reorder point; stock changes use adjustments or order workflow. Requires ADMIN."
+      "operationId": "inventoryReplaceInventorySettings"
+      "responses":
+        "200":
+          "description": "Successful response."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Inventory"
+        "400":
+          "description": "Malformed input or validation failure."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "404":
+          "description": "Resource missing or not visible."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "422":
+          "description": "Business rule violation."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "productId"
+          "in": "path"
+          "required": true
+          "description": "Product UUID."
+          "schema":
+            "type": "string"
+            "format": "uuid"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/InventoryUpdateRequest"
+    "delete":
+      "tags":
+        - "Inventory"
+      "summary": "Remove inventory record"
+      "description": "Remove only when no quantity, reservation, or history depends on it. Requires ADMIN."
+      "operationId": "inventoryRemoveInventoryRecord"
+      "responses":
+        "204":
+          "description": "No response body."
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "404":
+          "description": "Resource missing or not visible."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "409":
+          "description": "State, stock, or uniqueness conflict."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "productId"
+          "in": "path"
+          "required": true
+          "description": "Product UUID."
+          "schema":
+            "type": "string"
+            "format": "uuid"
+  "/inventory/{productId}/adjustments":
+    "get":
+      "tags":
+        - "Inventory"
+      "summary": "List adjustments"
+      "description": "List immutable stock adjustment history. Requires ADMIN."
+      "operationId": "inventoryListAdjustments"
+      "responses":
+        "200":
+          "description": "Successful response."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/AdjustmentPage"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "404":
+          "description": "Resource missing or not visible."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "429":
+          "description": "Rate limit exceeded."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "productId"
+          "in": "path"
+          "required": true
+          "description": "Product UUID."
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "limit"
+          "in": "query"
+          "required": false
+          "description": "Page size from 1 to 100; default 20."
+          "schema":
+            "type": "integer"
+            "minimum": 1
+            "maximum": 100
+            "default": 20
+        -
+          "name": "cursor"
+          "in": "query"
+          "required": false
+          "description": "Opaque cursor from the previous page."
+          "schema":
+            "type": "string"
+    "post":
+      "tags":
+        - "Inventory"
+      "summary": "Adjust stock"
+      "description": "Record signed adjustment with reason and actor; do not reduce on-hand below reserved. Requires ADMIN."
+      "operationId": "inventoryAdjustStock"
+      "responses":
+        "201":
+          "description": "Created."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/InventoryAdjustment"
+        "400":
+          "description": "Malformed input or validation failure."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "401":
+          "description": "Authentication is required or invalid."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "403":
+          "description": "Administrator access is required."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "404":
+          "description": "Resource missing or not visible."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "409":
+          "description": "State, stock, or uniqueness conflict."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "422":
+          "description": "Business rule violation."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+        "500":
+          "description": "Unexpected server error."
+          "content":
+            "application/problem+json":
+              "schema":
+                "$ref": "#/components/schemas/Problem"
+      "security":
+        -
+          "BearerAuth": []
+      "parameters":
+        -
+          "name": "productId"
+          "in": "path"
+          "required": true
+          "description": "Product UUID."
+          "schema":
+            "type": "string"
+            "format": "uuid"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/InventoryAdjustmentRequest"
+"components":
+  "securitySchemes":
+    "BearerAuth":
+      "type": "http"
+      "scheme": "bearer"
+      "bearerFormat": "JWT"
+  "schemas":
+    "Problem":
+      "type": "object"
+      "required":
+        - "type"
+        - "title"
+        - "status"
+        - "code"
+        - "detail"
+        - "instance"
+      "properties":
+        "type":
+          "type": "string"
+        "title":
+          "type": "string"
+        "status":
+          "type": "integer"
+        "code":
+          "type": "string"
+        "detail":
+          "type": "string"
+        "instance":
+          "type": "string"
+        "fieldErrors":
+          "type": "array"
+          "items":
+            "$ref": "#/components/schemas/FieldError"
+    "FieldError":
+      "type": "object"
+      "required":
+        - "field"
+        - "message"
+      "properties":
+        "field":
+          "type": "string"
+        "message":
+          "type": "string"
+    "RegisterUserRequest":
+      "type": "object"
+      "required":
+        - "email"
+        - "password"
+        - "fullName"
+      "additionalProperties": false
+      "properties":
+        "email":
+          "type": "string"
+          "format": "email"
+          "maxLength": 254
+        "password":
+          "type": "string"
+          "format": "password"
+          "minLength": 12
+          "maxLength": 128
+        "fullName":
+          "type": "string"
+          "minLength": 1
+          "maxLength": 120
+    "LoginRequest":
+      "type": "object"
+      "required":
+        - "email"
+        - "password"
+      "additionalProperties": false
+      "properties":
+        "email":
+          "type": "string"
+          "format": "email"
+        "password":
+          "type": "string"
+          "format": "password"
+    "AuthToken":
+      "type": "object"
+      "required":
+        - "accessToken"
+        - "tokenType"
+        - "expiresInSeconds"
+        - "user"
+      "properties":
+        "accessToken":
+          "type": "string"
+        "tokenType":
+          "type": "string"
+          "enum":
+            - "Bearer"
+        "expiresInSeconds":
+          "type": "integer"
+        "user":
+          "$ref": "#/components/schemas/User"
+    "User":
+      "type": "object"
+      "required":
+        - "id"
+        - "email"
+        - "fullName"
+        - "role"
+        - "active"
+        - "createdAt"
+        - "updatedAt"
+      "properties":
+        "id":
+          "type": "string"
+          "format": "uuid"
+        "email":
+          "type": "string"
+          "format": "email"
+        "fullName":
+          "type": "string"
+        "role":
+          "type": "string"
+          "enum":
+            - "CUSTOMER"
+            - "ADMIN"
+        "active":
+          "type": "boolean"
+        "createdAt":
+          "type": "string"
+          "format": "date-time"
+        "updatedAt":
+          "type": "string"
+          "format": "date-time"
+    "UserUpdateRequest":
+      "type": "object"
+      "required":
+        - "email"
+        - "fullName"
+      "additionalProperties": false
+      "properties":
+        "email":
+          "type": "string"
+          "format": "email"
+          "maxLength": 254
+        "fullName":
+          "type": "string"
+          "minLength": 1
+          "maxLength": 120
+    "UserPage":
+      "type": "object"
+      "required":
+        - "items"
+      "properties":
+        "items":
+          "type": "array"
+          "items":
+            "$ref": "#/components/schemas/User"
+        "nextCursor":
+          "type": "string"
+          "nullable": true
+    "ProductWriteRequest":
+      "type": "object"
+      "required":
+        - "sku"
+        - "name"
+        - "description"
+        - "category"
+        - "pricePaise"
+      "additionalProperties": false
+      "properties":
+        "sku":
+          "type": "string"
+          "minLength": 1
+          "maxLength": 64
+        "name":
+          "type": "string"
+          "minLength": 1
+          "maxLength": 160
+        "description":
+          "type": "string"
+          "maxLength": 4000
+        "category":
+          "type": "string"
+          "minLength": 1
+          "maxLength": 80
+        "pricePaise":
+          "type": "integer"
+          "minimum": 1
+          "description": "INR amount in paise."
+    "Product":
+      "type": "object"
+      "required":
+        - "id"
+        - "sku"
+        - "name"
+        - "description"
+        - "category"
+        - "pricePaise"
+        - "currency"
+        - "active"
+        - "inStock"
+        - "createdAt"
+        - "updatedAt"
+      "properties":
+        "id":
+          "type": "string"
+          "format": "uuid"
+        "sku":
+          "type": "string"
+        "name":
+          "type": "string"
+        "description":
+          "type": "string"
+        "category":
+          "type": "string"
+        "pricePaise":
+          "type": "integer"
+          "minimum": 1
+        "currency":
+          "type": "string"
+          "enum":
+            - "INR"
+        "active":
+          "type": "boolean"
+        "inStock":
+          "type": "boolean"
+        "createdAt":
+          "type": "string"
+          "format": "date-time"
+        "updatedAt":
+          "type": "string"
+          "format": "date-time"
+    "ProductPage":
+      "type": "object"
+      "required":
+        - "items"
+      "properties":
+        "items":
+          "type": "array"
+          "items":
+            "$ref": "#/components/schemas/Product"
+        "nextCursor":
+          "type": "string"
+          "nullable": true
+    "Address":
+      "type": "object"
+      "required":
+        - "recipientName"
+        - "line1"
+        - "city"
+        - "state"
+        - "postalCode"
+        - "countryCode"
+      "additionalProperties": false
+      "properties":
+        "recipientName":
+          "type": "string"
+          "maxLength": 120
+        "line1":
+          "type": "string"
+          "maxLength": 180
+        "line2":
+          "type": "string"
+          "maxLength": 180
+        "city":
+          "type": "string"
+          "maxLength": 100
+        "state":
+          "type": "string"
+          "maxLength": 100
+        "postalCode":
+          "type": "string"
+          "maxLength": 20
+        "countryCode":
+          "type": "string"
+          "enum":
+            - "IN"
+    "OrderLineRequest":
+      "type": "object"
+      "required":
+        - "productId"
+        - "quantity"
+      "additionalProperties": false
+      "properties":
+        "productId":
+          "type": "string"
+          "format": "uuid"
+        "quantity":
+          "type": "integer"
+          "minimum": 1
+          "maximum": 50
+    "OrderCreateRequest":
+      "type": "object"
+      "required":
+        - "items"
+        - "shippingAddress"
+      "additionalProperties": false
+      "properties":
+        "items":
+          "type": "array"
+          "minItems": 1
+          "maxItems": 50
+          "items":
+            "$ref": "#/components/schemas/OrderLineRequest"
+        "shippingAddress":
+          "$ref": "#/components/schemas/Address"
+        "customerNote":
+          "type": "string"
+          "maxLength": 500
+    "OrderUpdateRequest":
+      "type": "object"
+      "required":
+        - "shippingAddress"
+      "additionalProperties": false
+      "properties":
+        "shippingAddress":
+          "$ref": "#/components/schemas/Address"
+        "customerNote":
+          "type": "string"
+          "maxLength": 500
+    "OrderItem":
+      "type": "object"
+      "required":
+        - "productId"
+        - "sku"
+        - "productName"
+        - "quantity"
+        - "unitPricePaise"
+        - "lineTotalPaise"
+      "properties":
+        "productId":
+          "type": "string"
+          "format": "uuid"
+        "sku":
+          "type": "string"
+        "productName":
+          "type": "string"
+        "quantity":
+          "type": "integer"
+        "unitPricePaise":
+          "type": "integer"
+        "lineTotalPaise":
+          "type": "integer"
+    "Order":
+      "type": "object"
+      "required":
+        - "id"
+        - "orderNumber"
+        - "userId"
+        - "status"
+        - "items"
+        - "subtotalPaise"
+        - "currency"
+        - "shippingAddress"
+        - "createdAt"
+        - "updatedAt"
+      "properties":
+        "id":
+          "type": "string"
+          "format": "uuid"
+        "orderNumber":
+          "type": "string"
+        "userId":
+          "type": "string"
+          "format": "uuid"
+        "status":
+          "type": "string"
+          "enum":
+            - "PLACED"
+            - "CANCELLED"
+        "items":
+          "type": "array"
+          "items":
+            "$ref": "#/components/schemas/OrderItem"
+        "subtotalPaise":
+          "type": "integer"
+        "currency":
+          "type": "string"
+          "enum":
+            - "INR"
+        "shippingAddress":
+          "$ref": "#/components/schemas/Address"
+        "customerNote":
+          "type": "string"
+          "nullable": true
+        "createdAt":
+          "type": "string"
+          "format": "date-time"
+        "updatedAt":
+          "type": "string"
+          "format": "date-time"
+    "OrderPage":
+      "type": "object"
+      "required":
+        - "items"
+      "properties":
+        "items":
+          "type": "array"
+          "items":
+            "$ref": "#/components/schemas/Order"
+        "nextCursor":
+          "type": "string"
+          "nullable": true
+    "InventoryCreateRequest":
+      "type": "object"
+      "required":
+        - "productId"
+        - "onHandQuantity"
+        - "reorderPoint"
+      "additionalProperties": false
+      "properties":
+        "productId":
+          "type": "string"
+          "format": "uuid"
+        "onHandQuantity":
+          "type": "integer"
+          "minimum": 0
+        "reorderPoint":
+          "type": "integer"
+          "minimum": 0
+    "InventoryUpdateRequest":
+      "type": "object"
+      "required":
+        - "reorderPoint"
+      "additionalProperties": false
+      "properties":
+        "reorderPoint":
+          "type": "integer"
+          "minimum": 0
+    "Inventory":
+      "type": "object"
+      "required":
+        - "productId"
+        - "onHandQuantity"
+        - "reservedQuantity"
+        - "availableQuantity"
+        - "reorderPoint"
+        - "updatedAt"
+      "properties":
+        "productId":
+          "type": "string"
+          "format": "uuid"
+        "onHandQuantity":
+          "type": "integer"
+          "minimum": 0
+        "reservedQuantity":
+          "type": "integer"
+          "minimum": 0
+        "availableQuantity":
+          "type": "integer"
+          "minimum": 0
+          "readOnly": true
+          "description": "onHandQuantity minus reservedQuantity."
+        "reorderPoint":
+          "type": "integer"
+          "minimum": 0
+        "updatedAt":
+          "type": "string"
+          "format": "date-time"
+    "InventoryPage":
+      "type": "object"
+      "required":
+        - "items"
+      "properties":
+        "items":
+          "type": "array"
+          "items":
+            "$ref": "#/components/schemas/Inventory"
+        "nextCursor":
+          "type": "string"
+          "nullable": true
+    "InventoryAdjustmentRequest":
+      "type": "object"
+      "required":
+        - "deltaQuantity"
+        - "reason"
+      "additionalProperties": false
+      "properties":
+        "deltaQuantity":
+          "type": "integer"
+          "description": "Must be non-zero; enforced as a business rule."
+        "reason":
+          "type": "string"
+          "minLength": 3
+          "maxLength": 250
+        "reference":
+          "type": "string"
+          "maxLength": 100
+    "InventoryAdjustment":
+      "type": "object"
+      "required":
+        - "id"
+        - "productId"
+        - "deltaQuantity"
+        - "reason"
+        - "adjustedBy"
+        - "resultingInventory"
+        - "createdAt"
+      "properties":
+        "id":
+          "type": "string"
+          "format": "uuid"
+        "productId":
+          "type": "string"
+          "format": "uuid"
+        "deltaQuantity":
+          "type": "integer"
+        "reason":
+          "type": "string"
+        "reference":
+          "type": "string"
+          "nullable": true
+        "adjustedBy":
+          "type": "string"
+          "format": "uuid"
+        "resultingInventory":
+          "$ref": "#/components/schemas/Inventory"
+        "createdAt":
+          "type": "string"
+          "format": "date-time"
+    "AdjustmentPage":
+      "type": "object"
+      "required":
+        - "items"
+      "properties":
+        "items":
+          "type": "array"
+          "items":
+            "$ref": "#/components/schemas/InventoryAdjustment"
+        "nextCursor":
+          "type": "string"
+          "nullable": true

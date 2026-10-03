@@ -1,0 +1,5 @@
+flowchart LR
+    U[User] -->|1 to many| O[Order]
+    O -->|1 to many| I[Order Item]
+    I -->|many to 1| P[Product]
+    P -->|1 to 1| S[Inventory]
