@@ -1,0 +1,12 @@
+Week 3 controlled-defect regression run
+Date: 2026-10-04
+Test class: Week3RegressionTests
+
+Before fixes:
+Tests run: 7
+Expected failures observed: 7
+Issues exposed: owner update denied; non-owner update allowed; duplicate email with different case accepted; comments for a missing post returned 200; five-author post listing used 8 SQL statements rather than 1.
+
+After fixes, full Maven test run:
+BlogApiIntegrationTests: 4 run, 0 failures, 0 errors, 0 skipped.
+Week3RegressionTests: 7 run, 0 failures, 0 errors, 0 skipped.
