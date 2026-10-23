@@ -1,18 +1,24 @@
-# YuvaIntern Backend Internship
+# YuvaIntern Junior Backend Developer Internship
 
-Week 1 API design package for the Junior Backend Developer internship.
+This repository contains my work for the YuvaIntern Junior Backend Developer internship. I have organized the deliverables by week so the design documents, source code, and reports are easy to find.
 
-## Week 1 deliverables
+## Weekly work
 
-- Word report: week-01-api-design/Week1_Ecommerce_API_Design.docx. Upload this DOCX to the internship form.
-- OpenAPI contract: week-01-api-design/openapi.yaml.
-- Submission description: week-01-api-design/submission-description.txt, ready to paste into the form.
-- Week 1 package notes: week-01-api-design/README.md.
+- **[Week 1 — API Design](week-01-api-design/):** Requirements and endpoint design for an e-commerce API, documented with an OpenAPI specification and diagrams.
+- **[Week 2 — Blog API](week-02-blog-api/):** A Java and Spring Boot REST API for user registration, blog posts, and comments, with database integration, validation, and error handling.
+- **[Week 3 — Debugging](week-03-debugging/):** Debugging and fixing API issues, with regression tests to check the fixes.
+- **[Week 4 — Performance](week-04-performance/):** Pagination and performance testing, with the results documented in the report.
 
-## Proposed implementation target
+Week 1 is an e-commerce API design task. Weeks 2–4 work on a blog API, following the separate weekly task briefs.
 
-The assignment is a design task. The contract is intended for later Java and Spring Boot implementation backed by PostgreSQL. It uses OpenAPI 3.0.3, JSON, JWT bearer authentication, CUSTOMER and ADMIN roles, and INR amounts stored as integer paise.
+## Technologies
 
-## Scope
+Java 21, Spring Boot, Maven, REST, Spring Data JPA, Flyway, H2, and PostgreSQL. The Week 1 design package uses OpenAPI and Mermaid diagrams.
 
-The first API version covers accounts, products, orders, and inventory. It documents CRUD-oriented operations, access rules, validation, error responses, stock reservation, and an implementation roadmap. The backend service and payment or shipping integrations are not implemented in Week 1.
+## Running the code
+
+Open the folder for the week you want to run and follow the setup and test instructions in that folder's README. Week 1 contains design documents; it is not a runnable application.
+
+## Repository status
+
+The repository currently contains the Week 1–4 deliverables. Each week's folder has its own files and documentation.
